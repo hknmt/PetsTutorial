@@ -31,24 +31,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 Intent i = new Intent(MainActivity.this, EditorActivity.class);
-
-                startActivityForResult(i, 2253);
-//                startActivity(i);
+                startActivity(i);
             }
         });
 
         mDbHelper = new PetDbHelper(this);
-
-        displayDatabaseInfo();
     }
 
     @Override
@@ -56,6 +52,12 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        displayDatabaseInfo();
     }
 
     @Override
@@ -77,15 +79,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 2253) {
-            if (resultCode == RESULT_OK) {
-                displayDatabaseInfo();
-            }
-        }
-    }
-
     private void insertPet() {
         // Gets the data repository in write mode
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
@@ -102,14 +95,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void displayDatabaseInfo(){
-        PetDbHelper mDbHelper = new PetDbHelper(this);
+        String[] project = {
+                PetEntry._ID,
+                PetEntry.COLUMN_PET_NAME,
+                PetEntry.COLUMN_PET_BREED,
+                PetEntry.COLUMN_PET_GENDER,
+                PetEntry.COLUMN_PET_WEIGHT
+        };
 
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-        Cursor cursor = db.rawQuery("SELECT 0 FROM " + PetEntry.TABLE_NAME, null);
+        Cursor cursor = db.query(
+                PetEntry.TABLE_NAME,
+                project,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
         try{
-            TextView displayView = (TextView) findViewById(R.id.number);
+            TextView displayView = findViewById(R.id.text_total);
             displayView.setText("Number of rows in pets database table: " + cursor.getCount());
+
+            while (cursor.moveToNext()) {
+                displayView.setText(displayView.getText() + "\n" +
+                        cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_PET_NAME)) +
+                        " - " + cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_PET_BREED)) +
+                        " - " + cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_PET_GENDER)) +
+                        " - " + cursor.getInt(cursor.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT)));
+            }
         }finally {
             cursor.close();
         }

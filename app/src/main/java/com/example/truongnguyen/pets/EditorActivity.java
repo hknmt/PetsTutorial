@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.truongnguyen.pets.data.PetContract.PetEntry;
 import com.example.truongnguyen.pets.data.PetDbHelper;
@@ -36,13 +37,13 @@ public class EditorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        mGenderSpiner = (Spinner) findViewById(R.id.spiner_gender);
+        mGenderSpiner = findViewById(R.id.spiner_gender);
         mDbHelper = new PetDbHelper(this);
 
         setupSpiner();
@@ -61,22 +62,21 @@ public class EditorActivity extends AppCompatActivity {
             if (validation()) {
                 SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-                try {
-                    // Create a new map of values, where column names are the keys
-                    ContentValues values = new ContentValues();
-                    values.put(PetEntry.COLUMN_PET_NAME, mNameEditText.getText().toString());
-                    values.put(PetEntry.COLUMN_PET_BREED, mBreedEditText.getText().toString());
-                    values.put(PetEntry.COLUMN_PET_GENDER, mGender);
-                    values.put(PetEntry.COLUMN_PET_WEIGHT, Integer.parseInt(mWeightEditText.getText().toString()));
+                // Create a new map of values, where column names are the keys
+                ContentValues values = new ContentValues();
+                values.put(PetEntry.COLUMN_PET_NAME, mNameEditText.getText().toString().trim());
+                values.put(PetEntry.COLUMN_PET_BREED, mBreedEditText.getText().toString().trim());
+                values.put(PetEntry.COLUMN_PET_GENDER, mGender);
+                values.put(PetEntry.COLUMN_PET_WEIGHT, Integer.parseInt(mWeightEditText.getText().toString()));
 
-                    // Insert the new row
-                    db.insert(PetEntry.TABLE_NAME, null, values);
-                } finally {
-                    db.close();
+                // Insert the new row
+                long newRowId = db.insert(PetEntry.TABLE_NAME, null, values);
+
+                if (newRowId == -1) {
+                    Toast.makeText(this, "Error with saving pet", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Pet saved with row id: " + newRowId, Toast.LENGTH_SHORT).show();
                 }
-                // Return result if OK
-                Intent data = new Intent();
-                setResult(RESULT_OK);
                 finish();
                 return true;
             } else
@@ -93,9 +93,9 @@ public class EditorActivity extends AppCompatActivity {
     }
 
     private boolean validation() {
-        mNameEditText = (EditText) findViewById(R.id.edit_pet_name);
-        mBreedEditText = (EditText) findViewById(R.id.edit_pet_breed);
-        mWeightEditText = (EditText) findViewById(R.id.edit_pet_weight);
+        mNameEditText = findViewById(R.id.edit_pet_name);
+        mBreedEditText = findViewById(R.id.edit_pet_breed);
+        mWeightEditText = findViewById(R.id.edit_pet_weight);
 
         if (TextUtils.isEmpty(mNameEditText.getText())) {
             mNameEditText.setError("Không được để trống");
